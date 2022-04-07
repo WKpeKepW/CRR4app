@@ -65,18 +65,28 @@ namespace CRR4app
                         double commission = priceS * 0.08d;
                         double total = priceS * amount - commission * amount;
                         ew.WriteToCell(i, NewTotalSum, Valuedouble: total); //цена итого
-                        if (commission > difference && commission - difference >= 0.12d) // если комиссия покрывает разницу
+                        if (commission > difference) // если комиссия покрывает разницу
                         {
-                            double newcomiss = (commission - difference) * amount;
-                            ew.WriteToCell(i, NewModifiedComission, Valuedouble: newcomiss); //новая комиссия
-                            if (ew.ReadCell(i, returnSign) != "") //проверяем на возврат
-                            { ew.WriteToCell(i, returnCommision, Valuedouble: newcomiss); ew.WriteToCell(i, returnTotal, Valuedouble: total); }
+                            if (commission - difference <= 0.12d)// доплата нужна если размер комиссии не позволяет сделать иначе
+                            {
+                                double surOzon = ((commission - difference) + 0.12d) * amount;
+                                double newcomiss = 0.12d * amount;
+                                ew.WriteToCell(i, surchargeOZON, Valuedouble: surOzon);
+                                ew.WriteToCell(i, NewModifiedComission, Valuedouble: newcomiss);//новая комиссия
+                                if (ew.ReadCell(i, returnSign) != "") //проверяем на возврат
+                                { ew.WriteToCell(i, returnCommision, Valuedouble: newcomiss); ew.WriteToCell(i, returnOzon, Valuedouble: surOzon); ew.WriteToCell(i, returnTotal, Valuedouble: total); }//новая комиссия
+                            }
+                            else //если комиссия покрывает разницу
+                            {
+                                double newcomiss = (commission - difference) * amount;
+                                ew.WriteToCell(i, NewModifiedComission, Valuedouble: newcomiss);
+                                if (ew.ReadCell(i, returnSign) != "") //проверяем на возврат
+                                { ew.WriteToCell(i, returnCommision, Valuedouble: newcomiss); ew.WriteToCell(i, returnTotal, Valuedouble: total); }//новая комиссия
+                            }
                         }
                         else // если комиссия не покрывает разницу
                         {
                             double surOzon = ((difference - commission) + 0.12d) * amount;
-                            if (commission - difference <= 0.12d)// если доплата нужна если размер комиссии не позволяет сделать иначе
-                                surOzon = ((commission - difference) + 0.12d) * amount;
                             double newcomiss = 0.12d * amount;
                             ew.WriteToCell(i, surchargeOZON, Valuedouble: surOzon);// цена доплаты
                             if(ew.ReadCellDouble(i, Oldcomission) != newcomiss)//заполняем только если комиссия изменилась
