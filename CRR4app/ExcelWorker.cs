@@ -1,23 +1,20 @@
 ﻿using Microsoft.Office.Interop.Excel;
+using System.Runtime.InteropServices;
 using _Excel = Microsoft.Office.Interop.Excel;
 
 namespace CRR4app
 {
     internal class ExcelWorker : IDisposable
     {
-        bool isopen = false;
         string path;
         Workbook wb;
         Worksheet ws;
         _Application excel = new _Excel.Application();
-
-
         public ExcelWorker(string path, int sheet)
         {
             this.path = path;
             wb = excel.Workbooks.Open(path);
             ws = wb.Worksheets[sheet];
-            isopen = true;
         }
         public string ReadCell(int Rows, int Colums)
         {
@@ -45,20 +42,21 @@ namespace CRR4app
             try
             {
                 wb.SaveAs(path);
+
+                MessageBox.Show("Файл скорректирован");
             }
-            catch (Exception) { MessageBox.Show("Вы не закрыли корректируемый файл"); }
-            wb.Close();
+            catch (System.Runtime.InteropServices.COMException)
+            {
+                MessageBox.Show("Изменения не приняты");
+            }
             //try {  }
             //catch (Exception) { MessageBox.Show("Вы не закрыли файл перед изменением, не забудьте проверить открытую программу EXELE.EXE в диспечере задачь"); }
         }
-
         public void Dispose()
         {
-            if (isopen)
-            {
-                excel.Quit();
-            }
+            Marshal.ReleaseComObject(wb);
+            Marshal.ReleaseComObject(ws);
+            excel.Quit();
         }
-
     }
 }

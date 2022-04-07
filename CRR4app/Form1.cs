@@ -4,6 +4,7 @@ namespace CRR4app
     {
         string path;
         ExcelWorker ew;
+        bool ewWorked = false;
         public Form1()
         {
             InitializeComponent();
@@ -25,20 +26,26 @@ namespace CRR4app
                 MessageBox.Show("—начала выберите файл");
             else if (textBox1.Text == "" || textBox2.Text == "")
                 MessageBox.Show("¬ыберите промежуток корректировани€");
+            else if (int.Parse(textBox1.Text) > int.Parse(textBox2.Text))
+                MessageBox.Show("Ќачальное значение не может быть больше конечного значение");
             else
             {
+                if (ewWorked)
+                {
+                    ewWorked = false;
+                    ew.Dispose();
+                }
                 ew = new ExcelWorker(path, 1);
                 SetManyProcent(int.Parse(textBox1.Text), int.Parse(textBox2.Text), int.Parse(textBox3.Text), int.Parse(textBox4.Text),
-                    int.Parse(textBox5.Text), int.Parse(textBox6.Text), int.Parse(textBox7.Text), int.Parse(textBox8.Text),
-                    int.Parse(textBox9.Text), int.Parse(textBox10.Text), int.Parse(textBox11.Text), int.Parse(textBox12.Text),
-                    int.Parse(textBox13.Text), int.Parse(textBox14.Text), int.Parse(textBox15.Text));
+                         int.Parse(textBox5.Text), int.Parse(textBox6.Text), int.Parse(textBox7.Text), int.Parse(textBox8.Text),
+                         int.Parse(textBox9.Text), int.Parse(textBox10.Text), int.Parse(textBox11.Text), int.Parse(textBox12.Text),
+                         int.Parse(textBox13.Text), int.Parse(textBox14.Text), int.Parse(textBox15.Text));
                 ew.SaveAs("ќткорректированный файл.xlsx");
-                ew.Dispose();
-                MessageBox.Show("‘айл скорректирован");
+                ewWorked = true;
             }
         }
 
-        private void SetManyProcent(int Start, int Finish, int OldProcentColumCommission, int NewProcentColumCommission, int PriceSalesman, int PriceImplement, int AmountGoods, int NewTotalSum, int Oldcomission, int NewModifiedComission,int surchargeOZON,int returnSign, int returnOzon, int returnCommision, int returnTotal)
+        private void SetManyProcent(int Start, int Finish, int OldProcentColumCommission, int NewProcentColumCommission, int PriceSalesman, int PriceImplement, int AmountGoods, int NewTotalSum, int Oldcomission, int NewModifiedComission, int surchargeOZON, int returnSign, int returnOzon, int returnCommision, int returnTotal)
         {
             for (int i = Start; i <= Finish; i++)// смотрим только те строки которые наход€тьс€ в промежутке
             {
@@ -53,7 +60,7 @@ namespace CRR4app
                         double total = priceS * amount - commission;
                         ew.WriteToCell(i, NewTotalSum, Valuedouble: total); //цена итого
                         ew.WriteToCell(i, NewModifiedComission, Valuedouble: commission);//нова€ комисси€
-                        if(ew.ReadCell(i, returnSign) != "") //провер€ем на возврат
+                        if (ew.ReadCell(i, returnSign) != "") //провер€ем на возврат
                         { ew.WriteToCell(i, returnCommision, Valuedouble: commission); ew.WriteToCell(i, returnTotal, Valuedouble: total); }
                     }
                     else if (ew.ReadCellDouble(i, PriceSalesman) > ew.ReadCellDouble(i, PriceImplement)) // если цена продавца больше цены реализации
@@ -74,14 +81,23 @@ namespace CRR4app
                                 ew.WriteToCell(i, surchargeOZON, Valuedouble: surOzon);
                                 ew.WriteToCell(i, NewModifiedComission, Valuedouble: newcomiss);//нова€ комисси€
                                 if (ew.ReadCell(i, returnSign) != "") //провер€ем на возврат
-                                { ew.WriteToCell(i, returnCommision, Valuedouble: newcomiss); ew.WriteToCell(i, returnOzon, Valuedouble: surOzon); ew.WriteToCell(i, returnTotal, Valuedouble: total); }//нова€ комисси€
+                                {
+                                    if (ew.ReadCellDouble(i, Oldcomission) != newcomiss)
+                                        ew.WriteToCell(i, returnCommision, Valuedouble: newcomiss);
+                                    ew.WriteToCell(i, returnOzon, Valuedouble: surOzon);
+                                    ew.WriteToCell(i, returnTotal, Valuedouble: total);
+                                }//нова€ комисси€
                             }
                             else //если комисси€ покрывает разницу
                             {
                                 double newcomiss = (commission - difference) * amount;
                                 ew.WriteToCell(i, NewModifiedComission, Valuedouble: newcomiss);
                                 if (ew.ReadCell(i, returnSign) != "") //провер€ем на возврат
-                                { ew.WriteToCell(i, returnCommision, Valuedouble: newcomiss); ew.WriteToCell(i, returnTotal, Valuedouble: total); }//нова€ комисси€
+                                {
+                                    if (ew.ReadCellDouble(i, Oldcomission) != newcomiss)
+                                        ew.WriteToCell(i, returnCommision, Valuedouble: newcomiss);
+                                    ew.WriteToCell(i, returnTotal, Valuedouble: total);
+                                }//нова€ комисси€
                             }
                         }
                         else // если комисси€ не покрывает разницу
@@ -89,10 +105,16 @@ namespace CRR4app
                             double surOzon = ((difference - commission) + 0.12d) * amount;
                             double newcomiss = 0.12d * amount;
                             ew.WriteToCell(i, surchargeOZON, Valuedouble: surOzon);// цена доплаты
-                            if(ew.ReadCellDouble(i, Oldcomission) != newcomiss)//заполн€ем только если комисси€ изменилась
+                            MessageBox.Show(ew.ReadCellDouble(i, Oldcomission).ToString());
+                            if (ew.ReadCellDouble(i, Oldcomission) != newcomiss)//заполн€ем только если комисси€ изменилась
                                 ew.WriteToCell(i, NewModifiedComission, Valuedouble: newcomiss); //нова€ комисси€
                             if (ew.ReadCell(i, returnSign) != "") //провер€ем на возврат
-                            { ew.WriteToCell(i, returnCommision, Valuedouble: newcomiss);ew.WriteToCell(i, returnOzon, Valuedouble: surOzon); ew.WriteToCell(i, returnTotal, Valuedouble: total); }
+                            {
+                                if (ew.ReadCellDouble(i, Oldcomission) != newcomiss)
+                                    ew.WriteToCell(i, returnCommision, Valuedouble: newcomiss);
+                                ew.WriteToCell(i, returnOzon, Valuedouble: surOzon);
+                                ew.WriteToCell(i, returnTotal, Valuedouble: total);
+                            }
                         }
                     }
                     else // если цена продавца меньше цены реализации
@@ -121,8 +143,10 @@ namespace CRR4app
         }
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if(ew != null)
-             ew.Dispose();
+            if (ewWorked)
+            {
+                ew.Dispose();
+            }
         }
     }
 }
