@@ -49,7 +49,7 @@ namespace CRR4app
         {
             for (int i = Start; i <= Finish; i++)// смотрим только те строки которые находяться в промежутке
             {
-                if (ew.ReadCellDouble(i, OldProcentColumCommission) == 0.15d && ew.ReadCell(i, PriceSalesman) != "") //если в строке старой комисии 15% и при этом остальные строки прописаны начинаем менять 
+                if (ew.ReadCellDouble(i, OldProcentColumCommission) == 0.15d && ew.ReadCellDouble(i, OldProcentColumCommission+2) != 0.0d) //если в строке старой комисии 15% и при этом остальные строки прописаны начинаем менять 
                 {
                     ew.WriteToCell(i, NewProcentColumCommission, Valuedouble: 0.08d); //изменяем цену комисии
                     if (ew.ReadCellDouble(i, PriceSalesman) == ew.ReadCellDouble(i, PriceImplement)) // если цена продавца та же что и реализации
@@ -105,7 +105,6 @@ namespace CRR4app
                             double surOzon = ((difference - commission) + 0.12d) * amount;
                             double newcomiss = 0.12d * amount;
                             ew.WriteToCell(i, surchargeOZON, Valuedouble: surOzon);// цена доплаты
-                            MessageBox.Show(ew.ReadCellDouble(i, Oldcomission).ToString());
                             if (ew.ReadCellDouble(i, Oldcomission) != newcomiss)//заполняем только если комиссия изменилась
                                 ew.WriteToCell(i, NewModifiedComission, Valuedouble: newcomiss); //новая комиссия
                             if (ew.ReadCell(i, returnSign) != "") //проверяем на возврат
